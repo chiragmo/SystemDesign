@@ -1,0 +1,99 @@
+Author: Chirag M. Onkarappa
+email: chiragmonkarappa@gmail.com
+Usage: This project is intented for recruiting purpose of SupplyHouse Inc only
+-------------------------------------------------------------------------
+Directory Structure
+
+src/jobAutomation/build.xml
+
+src/jobAutomation/driver/Driver.java  
+
+src/jobAutomation/multithreading/CreateWorkers.java          
+src/jobAutomation/multithreading/CreationOfThreadsInterface.java
+src/jobAutomation/multithreading/ObjectPool.java
+src/jobAutomation/multithreading/ThreadPool.java
+src/jobAutomation/multithreading/WorkerThread.java
+
+src/jobAutomation/parsers/CSVReader.java
+src/jobAutomation/parsers/ExcelReader.java
+src/jobAutomation/parsers/FileReader.java
+src/jobAutomation/parsers/Parsing.java
+src/jobAutomation/parsers/Parsing/TabReader.java
+
+src/jobAutomation/resources/config.properties
+src/jobAutomation/resources/LogFile
+
+src/jobAutomation/sql/SqlHandler.java
+
+src/jobAutomation/util/AllException.java
+src/jobAutomation/util/ConfigurationFile.java
+src/jobAutomation/util/FileProcessor.java
+src/jobAutomation/util/Logger.java
+
+-------------------------------------------------------------------------
+
+System Design Documentation
+
+Design Patterns Used-
+
+1. Single Dispatch Pattern: class.Parsing return interface.FileReader based on file  extension, runtime polymorphism is used in slecting either of class.CSVReader , 
+class.ExcelReader or class.TabReader
+
+2. Object Pool Pattern: The project enables multithreaded SQL write to table. 
+class.CreateWorkers is used to create a Thread pool from class.ObjectPool. Then
+methods in class.CreateWorkers start() on multiple runnable of class.WorkerThread.
+
+3. Producer-Consumer Pattern: The class.Logger uses two methods: the producer is getting writes from driver thread and many child threads. These are timestamped and 
+pushed into the queue. The Consumer is running on permanent child thread created on instantiating class.Logger, it synchornizly pops from queue and writes to LogFile.
+
+Important Points-
+* Relational Database is used with schema and notes present in DatabaseSchema.pdf
+* Batch Reads from File: There is a tradeoff in reading huge data (RAM performance impact) and multiple file reads. Therefore batch read is employed.
+* SQL Batch Writes: executeBatch() is used to execute bulk inserts using language provided class.Statement from each worker thread
+* SQL Retry Logic: The result set is analysed and inserted are tried for three more times.
+* SQL Insert Ignore: If the inserts are already present ignore the current one.
+* Coding to Interface: This design principle is employed where necessary.
+* Config.properties: All configuration must be updated here only
+* Logger and Exceptions: All exception handling are not shown only some are demonstrated, but similar pattern will be used. 
+
+
+Possible Extensions:
+1. Template pattern for exception handling 
+2. Multithreaded File handling: Currently one file is selected from server directory
+   and inserts happen for multithreads of one file.
+   parallelStream() can be used in driver code to allow multiple files to be worked on.
+3. Object pool can be extended to include to borrow SQL connections instances since multithreaded can work on SQL Inserts- only with different SQL connection.
+4. The current project does not wait for all files to arrive, it starts as soon as autoscheduler loads the java file. This logic to wait until all files can be added.
+
+Note: After build success,the jar file is loaded into a autoscheduler which executes this jar say every morning at 10.10
+
+-------------------------------------------------------------------------
+
+Following are the commands and the instructions to run ANT on the project.
+#### Note: build.xml is present in jobAutomation/src folder.
+
+## Instruction to clean:
+
+####Command: ant -buildfile jobAutomation/src/build.xml clean
+
+Description: It cleans up all the .class files that were generated when code was
+compiled.
+
+-----------------------------------------------------------------------
+## Instruction to compile:
+
+####Command: ant -buildfile jobAutomation/src/build.xml all
+
+Description: Compiles the code and generates .class files inside the BUILD folder.
+
+-----------------------------------------------------------------------
+## Instruction to run:
+
+####Command: ant -buildfile jobAutomation/src/build.xml run
+
+Note: Arguments accept the absolute path of the files.
+
+-------------------------------------------------------------------------
+
+
+
